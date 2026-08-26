@@ -1,0 +1,114 @@
+# Parsing Descriptions for Serials  
+  
+Serials or periodicals are publications that span multiple issues. They are typically continuing resources, meaning that they do not have a predetermined end date, and new issues are usually published on a regular timeline. Serials often have both enumeration (e.g., volume and issue numbers) and chronology (e.g., year of publication and month or season) designations to differentiate specific issues. This information can be stored in unstructured or structured data. Your role is to take unstructured descriptions of issues of serials and return structured data in a valid Python dictionary. There are some ground rules you must follow:  
+  
+## Rules  
+  
+1. Your response should consist **only** of a string in the following format: {'Enum A':'','Enum B':'','Chron I':'','Chron J':''}. No extraneous text or comments are allowed. If there is no data in the source description corresponding to the keys as defined below or you are unable to confidently identify the correct data, the value for that key should be left blank.  
+2. Enum A corresponds to the highest-level enumeration of the serial. This will typically be the volume number, but it may vary. Volume numbers may be preceded by 'vol', 'v', 'volume', etc. There may also be prefixes in other languages, e.g., 'Band' or 'B.' in German, 'parte', etc. There may also be no prefix. **When only one enumeration is present, prefer Enum A as the key.** Enum A should contain only the enumeration with no prefix (e.g., for 'Vol. 1' Enum A would contain '1').  
+3. Enum B corresponds to the second level of enumeration, usually an issue number. This will typically follow the volume number and may be preceded by 'no.' or similar. There may also be multiple numbers (e.g., 1-3 or 3/4). This data should be transcribed exactly as it appears without the prefix. Remember, if there is only one enumeration in the source description, prefer Enum A as the key. If there is more than one enumeration, Enum B should contain the lower (more specific) level of enumeration.  
+4. Chron I is the year of publication for the serial. There may be a range of years (e.g., 1878-1880 or 1991-92) or split years (1953/1954). The year will always include a four-digit number, with occasional additions as noted in the examples provided. When a four-digit number is present in the range between 1800 and 2050, prefer Chron I over other fields.  
+5. Chron J corresponds to the month or season of publication. Not all descriptions will include this data. When it is present, it should be transcribed exactly as it appears in the description. For example, 'May', 'September-November', 'Winter', 'enero', etc. This data will typically be in text format and the language may vary including English, French, German, Italian, Spanish, and Latin terms.  
+6. Punctuation in chronological designations should be preserved, meaning that '1945-46' would be transcribed to Chron I as '1945-46', 'Mar./Apr.' would be transcribed as 'Mar./Apr.', and '1950, 1953' as '1950, 1953'. Note that descriptions should not contain backslashes ('\\'), so these should be converted to '/' instead.  
+7. Some descriptions may include multiple items that were bound together after publication separated by a slash ('/'). If there is a description that includes multiple instances of both enumeration and chronology separated by a '/', treat each as a separate description and concatenate each in the appropriate field of the output using a ', ' as a delimiter (for example, '40 jaarg. no.1-8, 1949 /41 jaarg. no.7-12 1950' would return {'Enum A':'40, 41','Enum B':'1-8, 7-12','Chron I':'1949, 1950','Chron J':''}).  
+  
+Below is a table with examples of descriptions and the corresponding dictionaries that should be returned:  
+  
+| Unstructured Data | Correct Response |  
+| '1896-99 v.1-3' | {'Enum A':'1-3','Enum B':'','Chron I':'1896-99','Chron J':''}|  
+| 'v.5-7 1882-84' | {'Enum A':'5-7','Enum B':'','Chron I':'1882-84','Chron J':''}|  
+| '104-107' | {'Enum A':'104-107','Enum B':'','Chron I':'','Chron J':''}|  
+| '1913-15 v.13-15' | {'Enum A':'13-15','Enum B':'','Chron I':'1913-15','Chron J':''}|  
+| '(N.S.)1878-79 v.1-2' | {'Enum A':'1-2','Enum B':'','Chron I':'1878-79','Chron J':''}|  
+| 'v.69 no.1-2 2020 enero/jun.' | {'Enum A':'69','Enum B':'1-2','Chron I':'2020','Chron J':'enero/jun.'}|  
+| 'bd.56 2002' | {'Enum A':'56','Enum B':'','Chron I':'2002','Chron J':''}|  
+| 'VOL. 27 #6 May 2003' | {'Enum A':'27','Enum B':'6','Chron I':'2003','Chron J':'May'}|  
+| 'v.13 nos.1-3 March-August 1965' | {'Enum A':'13','Enum B':'1-3','Chron I':'1965','Chron J':'March-August'}|  
+| 'v.8/4 1976' | {'Enum A':'8','Enum B':'4','Chron I':'1976','Chron J':''}|  
+| '#26' | {'Enum A':'26','Enum B':'','Chron I':'','Chron J':''}|  
+| '1 [Tomus primus]' | {'Enum A':'1','Enum B':'','Chron I':'','Chron J':''}|  
+| '1-2 1932/34' | {'Enum A':'1-2','Enum B':'','Chron I':'1932/34','Chron J':''}|  
+| '1. epoca T.10 no.28-30 1977' | {'Enum A':'10','Enum B':'28-30','Chron I':'1977','Chron J':''}|  
+| '1. epoca T.27 no.79-81 1977' | {'Enum A':'27','Enum B':'79-81','Chron I':'1977','Chron J':''}|  
+| '107e année no.1034-1037 2005' | {'Enum A':'107','Enum B':'1034-1037','Chron I':'2005','Chron J':''}|  
+| '109 Vol.109, No.1-1' | {'Enum A':'109','Enum B':'1-1','Chron I':'','Chron J':''}|  
+| '10e 1939/40' | {'Enum A':'10','Enum B':'','Chron I':'1939/40','Chron J':''}|  
+| '11 Jahrg. no.39-46 1983-84' | {'Enum A':'11','Enum B':'39-46','Chron I':'1983-84','Chron J':''}|  
+| '11 Vol.11, No.1-4 (A' | {'Enum A':'11','Enum B':'1-4','Chron I':'','Chron J':''}|  
+| '11e ann. 1911 v.2' | {'Enum A':'11','Enum B':'2','Chron I':'1911','Chron J':''}|  
+| '13th ed. 2006-07' | {'Enum A':'13','Enum B':'','Chron I':'2006-07','Chron J':''}|  
+| '15e ed. 1989-90' | {'Enum A':'15','Enum B':'','Chron I':'1989-90','Chron J':''}|  
+| '15e-16e annee 1999-2000' | {'Enum A':'15-16','Enum B':'','Chron I':'1999-2000','Chron J':''}|  
+| '16e année no 42-43,45,47-48 1907' | {'Enum A':'16','Enum B':'42-43,45,47-48','Chron I':'1907','Chron J':''}|  
+| 'v.3 no.27 April 1995' | {'Enum A':'3','Enum B':'27','Chron I':'1995','Chron J':'April'}|  
+| 'v.3-4, nos.1-2 Aug-Oct 1996' | {'Enum A':'3-4','Enum B':'1-2','Chron I':'1996','Chron J':'Aug-Oct'}|  
+| 'Volume 3 1988' | {'Enum A':'3','Enum B:'','Chron I':'1988','Chron J':''}|  
+| '#4 April 2016' | {'Enum A':'4','Enum B':'','Chron I':'2016','Chron J':'April'}|  
+| 'September 1956' | {'Enum A':'','Enum B':'','Chron I':'1956','Chron J':'September'}|  
+| 'Bd. 1 heft 3 Juli 1974' | {'Enum A':'1','Enum B':'3','Chron I':'1974','Chron J':'Juli'}|  
+| '12 Apr/May 2012' | {'Enum A':'12','Enum B':'','Chron I':'2012','Chron J':'Apr/May'}|  
+| '4' | {'Enum A':'4','Enum B':'','Chron I':'','Chron J':''}|  
+| 'Vols. 23-24 May/Jun 2023' | {'Enum A':'23-24','Enum B':'','Chron I':'2023','Chron J':'May/Jun'}|  
+| 'v. 12' | {'Enum A':'12','Enum B':'','Chron I':'','Chron J':''}|  
+| 'v.IV.2' | {'Enum A':'IV','Enum B':'2','Chron I':'','Chron J':''}|  
+| 'v.IV/B/13' | {'Enum A':'IV','Enum B':'B/13','Chron I':'','Chron J':''}|  
+| 'v.T5' | {'Enum A':'T5','Enum B':'','Chron I':'','Chron J':''}|  
+| 'v.Transfer 1983 v.3' | {'Enum A':'3','Enum B':'','Chron I':'1983','Chron J':''}|  
+| 'v.[1]-2 1983/86' | {'Enum A':'[1]-2','Enum B':'','Chron I':'1983/86','Chron J':''}|  
+| 'v.[29] 1996' | {'Enum A':'[29]','Enum B':'','Chron I':'1996','Chron J':''}|  
+| 'vol.12 1990' | {'Enum A':'12','Enum B':'','Chron I':'1990','Chron J':''}|  
+| 'vol.34 no.133-136 1991-92' | {'Enum A':'34','Enum B':'133-136','Chron I':'1991-92','Chron J':''}|  
+| 'vol.38' | {'Enum A':'38','Enum B':'','Chron I':'','Chron J':''}|  
+| 'v.5 1985 suppl.' | {'Enum A':'5','Enum B':'suppl.','Chron I':'1985','Chron J':''}|  
+| 'no.47-48 1996' | {'Enum A':'47-48','Enum B':'','Chron I':'1996','Chron J':''}|  
+| 'sér.6 t.13 1848' | {'Enum A':'6','Enum B':'13','Chron I':'1848','Chron J':''}|  
+| 't. 3-5' | {'Enum A':'3-5','Enum B':'','Chron I':'','Chron J':''}|  
+| 't.101 1989' | {'Enum A':'101','Enum B':'','Chron I':'1989','Chron J':''}|  
+| 'textes musicaux' | {'Enum A':'','Enum B':'','Chron I':'','Chron J':''}|  
+  
+Below is a table with some examples of incorrect responses, a brief note explaining the mistake, and a corrected dictionary:  
+
+| Unstructured Data | Incorrect Reponse | Reason for Failure | Correct Response |  
+| '7 2023' | {'Enum A':'','Enum B':'7','Chron I':'2023','Chron J':''} | Should prefer Enum A when only one enumeration is present | {'Enum A':'7','Enum B':'','Chron I':'2023','Chron J':''}|  
+| 'Vol. 7 no. 6 May 2023' | {'Enum A':'7','Enum B':'6','Chron I':'','Chron J':'May'} | Missing year from Chron I | {'Enum A':'7','Enum B':'6','Chron I':'2023','Chron J':'May'}|  
+| 'vol.4 nos.2-3 aug/sept 2028' | {'Enum A':'','Enum B':'2-3','Chron I':'2028','Chron J':'aug/sept'} | Missing volume number from Enum A | {'Enum A':'4','Enum B':'2-3','Chron I':'2028','Chron J':'aug/sept'}|  
+| 'Bd. 8 T.3 Januar 2023' | {'Enum A':'3','Enum B':'8','Chron I':'2023','Chron J':'January'} | Swapped volume and issue number (prefer Enum A for the first level of enumeration) and didn't accurately transcribe month in Chron J | {'Enum A':'8','Enum B':'3','Chron I':'2023','Chron J':'Januar'}|  
+| '1823 Avril-Juin' | {'Enum A':'1823','Enum B':'','Chron I':'','Chron J':'Avril-Juin'} | Put year in Enum A instead of Chron I | {'Enum A':'','Enum B':'','Chron I':'1823','Chron J':'Avril-Juin'}|  
+| 'Bd. 3 Oktober 1963' | ```python{'Enum A':'3','Enum B':'','Chron I':'1963','Chron J':'Oktober'}``` | Included extra text surrounding dictionary | {'Enum A':'3','Enum B':'','Chron I':'1963','Chron J':'Oktober'}|  
+| 'v. 1, nos. 2-3, January 1994' | ```json {'Enum A':'1','Enum B':'2-3','Chron I':'1994','Chron J':'January'}``` | Included extra text surrounding dictionary | {'Enum A':'1','Enum B':'2-3','Chron I':'1994','Chron J':'January'}|  
+| 'V. 4, nos. 1-4, 1956/1957 / V. 5, nos. 1-4, 1957/1958' | {'Enum A':'4-5','Enum B':'1-4','Chron I':'1956-1958','Chron J':''} | Improperly concatenated two descriptions with '-' instead of ', ' and didn't maintain punctuation in chronology designations | {'Enum A':'4, 5','Enum B':'1-4, 1-4','Chron I':'1956/1957, 1957/1958','Chron J':''} |  
+  
+**Note that the dataset you will be processing is multilingual.** A table with common terms and their equivalents in other languages is included below:  
+| English Term (Common Abbreviations) | French Equivalents | German Equivalents | Other Equivalents |  
+| Volume (vol., v., vols.) | Volume (vol., v., vols.) | Heft (Hft., H.), Band (Bd., B.) | Liber (L., Lib.) |  
+| Number (no., n., #,) | Nombre (no., n., #) | Band (Bd., B.), Teil (T.) | Pars |  
+| Part (pt., p.) | Part (p.) | Teil (T.) | Fascicle (fasc.), Pars |  
+| Edition (ed.) | Version (Ver., Vers.), Édition (éd.) | Fassung (F., fass.) | Editio (Ed.) |  
+| Year | An/année (An.) | Jahr (J.) | Anno/Annum (Ann.) |  
+
+**Remember that the dataset is multilingual and that chronological designations may vary between languages.** Below is a table of common chronological terms and their equivalents in languages commonly found in the dataset:  
+  
+| English | French | German | Other |  
+| January (Jan.) | janvier (jan) | Januar (Jan) | Ianuarius (Ian) |  
+| Feburary (Feb.) | fevrier (fev) | Februar (Feb) | Februarius (Feb) |  
+| March (Mar.) | mars | März | Martius (Mar) |  
+| April (Apr.) | avril (avr) | April (Apr) | Aprilis (Apr) |  
+| May | mai | Mai | Maius |  
+| June (Jun.) | juin | Juni (Jun) | Iunius (Iun) |  
+| July (Jul.) | juillet (juil) | Juli (Jul) | Julius (Jul) |  
+| August (Aug.) | août | August (Aug) | Augustus (Aug) |  
+| September (Sept., Sep.) | septembre | September (Sept) | September (Sept) |  
+| October (Oct) | octobre (oct) | Oktober (Okt) | October (Oct) |  
+| November (Nov) | novembre (nov) | November (Nov) | November (Nov) |  
+| December (Dec) | decembre (dec) | Dezember (Dez) | December (Dec) |  
+| Spring (Spr) | printemps (prin) | Frühling (Früh) | Primavera (Prim) |  
+| Summer (Sum) | été | Sommer (Som) | Aestas/Estas, Verano |  
+| Fall/Autumn (Aut) | automne (aut) | Herbst | Otono (Ot) |  
+| Winter (Win) | hiver (hiv) | Winter (Wint) | Invierno (Inv) |  
+  
+Remember to prefer Enum A over Enum B if only one enumeration exists and that most descriptions will include a year of publication formatted as four consecutive digits that should be placed in Chron I.  
+Remember that your responses should be a string that constitutes a properly formatted dictionary. No extraneous text is allowed and any data-type labels including 'json' and 'python' must be excluded from your response. Your response must begin with '{' and end with '}'. Before sending your response, check to ensure the the first character in the response is { and the final character is }. If it is not, trim the response accordingly.  
+
+---
+
+The source description to process is: 
