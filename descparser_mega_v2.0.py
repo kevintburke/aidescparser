@@ -289,6 +289,21 @@ class descparser:
                 if i not in str(parsed_data):
                     print(f'FAILURE: Numeric data from description {desc} missing in parsed data {parsed_data}')
                     return False
+        #Check for complex multiple enumeration or date ranges
+        commacheck = []
+        for i in ["Enum A","Enum B","Enum C","Enum D"]:
+            if "," in parsed_data[i]:
+                commacheck.append(parsed_data[i])
+        if len(commacheck) > 1:
+            print(f"FAILURE: Multiple levels of complex enumeration found in {desc}")
+            return False
+        multidatecheck = []
+        for i in ["Chron I","Chron J","Chron K"]:
+            if "-" in parsed_data[i] or "," in parsed_data[i]:
+                multidatecheck.append(parsed_data[i])
+        if len(multidatecheck) > 1:
+            print(f'FAILURE: Multiple levels of complex chronology found in {desc}')
+            return False
         return True
     
 def main():
