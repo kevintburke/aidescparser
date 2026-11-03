@@ -118,8 +118,6 @@ class descparser:
         with open("megaparser_prompt_v1.0.txt", "r", encoding="utf-8") as fh:
             prompt = fh.read()
         print(f'Prompt read: ',prompt)
-        with open("parsecheck_prompt_v2.0.txt", "r", encoding="utf-8") as fj:
-            parsecheckprompt = fj.read()
         #Check that ollama is running and prompt user to activate if not, breaking function
         print("Checking ollama...")
         try:
